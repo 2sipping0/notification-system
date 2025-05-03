@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notification System Demo</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Real-Time Notification System</h1>
+    </header>
+
+    <div class="user-controls">
+      <div class="form-group">
+        <label for="userId">User ID:</label>
+        <input type="text" id="userId" placeholder="Enter your user ID" value="user123">
+        <button id="registerBtn">Register</button>
+      </div>
+    </div>
+
+    <div class="demo-panel">
+      <h2>Demo Controls</h2>
+      <div class="demo-controls">
+        <div class="form-group">
+          <h3>Trigger Events</h3>
+          
+          <div class="event-form">
+            <h4>User Registration</h4>
+            <input type="text" id="username" placeholder="Username" value="John Doe">
+            <button id="triggerRegisterBtn">Trigger Welcome</button>
+          </div>
+
+          <div class="event-form">
+            <h4>New Message</h4>
+            <input type="text" id="senderName" placeholder="Sender Name" value="Jane Smith">
+            <button id="triggerMessageBtn">Trigger Message</button>
+          </div>
+
+          <div class="event-form">
+            <h4>Task Assignment</h4>
+            <input type="text" id="taskName" placeholder="Task Name" value="Review Report">
+            <button id="triggerTaskBtn">Trigger Task</button>
+          </div>
+
+          <div class="event-form">
+            <h4>System Maintenance</h4>
+            <input type="text" id="maintenanceMsg" placeholder="Maintenance Message" value="Server maintenance scheduled">
+            <button id="triggerMaintenanceBtn">Trigger Maintenance</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <h3>Create Custom Notification</h3>
+          <select id="notificationType">
+            <option value="info">Info</option>
+            <option value="success">Success</option>
+            <option value="warning">Warning</option>
+            <option value="error">Error</option>
+          </select>
+          <input type="text" id="notificationTitle" placeholder="Notification Title">
+          <textarea id="notificationMessage" placeholder="Notification Message"></textarea>
+          <button id="createNotificationBtn">Create Notification</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="notifications-panel">
+      <div class="notifications-header">
+        <h2>Notifications</h2>
+        <div class="notifications-actions">
+          <button id="clearAllBtn">Clear All</button>
+          <button id="markAllReadBtn">Mark All Read</button>
+        </div>
+      </div>
+      <div id="notifications" class="notifications-list">
+        <div class="empty-state">No notifications yet. Register a user to get started.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/client.js"></script>
+</body>
+</html>

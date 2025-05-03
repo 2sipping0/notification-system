@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notification System - Demo Events</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .container {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .column {
+      flex: 1;
+    }
+    
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .card h3 {
+      margin-top: 0;
+    }
+    
+    input, select, button, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    
+    button {
+      cursor: pointer;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    
+    #responseContainer {
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      height: 300px;
+      overflow-y: auto;
+    }
+    
+    .nav {
+      margin-bottom: 20px;
+    }
+    
+    .nav a {
+      margin-right: 15px;
+      color: #4caf50;
+      text-decoration: none;
+    }
+    
+    .nav a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Notification System - Demo Events</h1>
+  
+  <div class="nav">
+    <a href="/">Notification Dashboard</a>
+    <a href="/demo.html">Event Simulation</a>
+  </div>
+  
+  <div class="container">
+    <div class="column">
+      <div class="card">
+        <h3>Trigger Notification Events</h3>
+        <div>
+          <label for="eventType">Event Type:</label>
+          <select id="eventType">
+            <option value="register">User Registration</option>
+            <option value="message">New Message</option>
+            <option value="task">Task Assignment</option>
+            <option value="maintenance">System Maintenance</option>
+          </select>
+        </div>
+        
+        <!-- User Registration Fields -->
+        <div id="registerFields">
+          <div>
+            <label for="userId">User ID:</label>
+            <input type="text" id="userId" placeholder="Enter user ID">
+          </div>
+          <div>
+            <label for="username">Username:</label>
+            <input type="text" id="username" placeholder="Enter username">
+          </div>
+        </div>
+        
+        <!-- Message Fields -->
+        <div id="messageFields" style="display: none;">
+          <div>
+            <label for="messageUserId">Recipient User ID:</label>
+            <input type="text" id="messageUserId" placeholder="Enter recipient's user ID">
+          </div>
+          <div>
+            <label for="senderName">Sender Name:</label>
+            <input type="text" id="senderName" placeholder="Enter sender's name">
+          </div>
+          <div>
+            <label for="messageId">Message ID (optional):</label>
+            <input type="text" id="messageId" placeholder="Enter message ID">
+          </div>
+        </div>
+        
+        <!-- Task Fields -->
+        <div id="taskFields" style="display: none;">
+          <div>
+            <label for="taskUserId">Assignee User ID:</label>
+            <input type="text" id="taskUserId" placeholder="Enter assignee's user ID">
+          </div>
+          <div>
+            <label for="taskName">Task Name:</label>
+            <input type="text" id="taskName" placeholder="Enter task name">
+          </div>
+          <div>
+            <label for="taskId">Task ID (optional):</label>
+            <input type="text" id="taskId" placeholder="Enter task ID">
+          </div>
+        </div>
+        
+        <!-- Maintenance Fields -->
+        <div id="maintenanceFields" style="display: none;">
+          <div>
+            <label for="maintenanceMessage">Maintenance Message:</label>
+            <textarea id="maintenanceMessage" placeholder="Enter maintenance details"></textarea>
+          </div>
+          <div>
+            <label for="scheduledTime">Scheduled Time:</label>
+            <input type="datetime-local" id="scheduledTime">
+          </div>
+        </div>
+        
+        <button id="triggerBtn">Trigger Event</button>
+      </div>
+      
+      <div class="card">
+        <h3>Register as User to Receive Notifications</h3>
+        <div>
+          <label for="registerUserId">Your User ID:</label>
+          <input type="text" id="registerUserId" placeholder="Enter your user ID">
+        </div>
+        
+        <button id="registerBtn">Register</button>
+        <p id="connectionStatus">Not connected</p>
+      </div>
+    </div>
+    
+    <div class="column">
+      <div class="card">
+        <h3>API Response</h3>
+        <div id="responseContainer"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Connect to the server
+    const socket = io();
+    const connectionStatus = document.getElementById('connectionStatus');
+    let currentUserId = null;
+    
+    // DOM Elements
+    const eventType = document.getElementById('eventType');
+    const triggerBtn = document.getElementById('triggerBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const responseContainer = document.getElementById('responseContainer');
+    
+    // Fields containers
+    const registerFields = document.getElementById('registerFields');
+    const messageFields = document.getElementById('messageFields');
+    const taskFields = document.getElementById('taskFields');
+    const maintenanceFields = document.getElementById('maintenanceFields');
+    
+    // Handle socket connection events
+    socket.on('connect', () => {
+      connectionStatus.textContent = 'Connected to server';
+      connectionStatus.style.color = 'green';
+    });
+    
+    socket.on('disconnect', () => {
+      connectionStatus.textContent = 'Disconnected from server';
+      connectionStatus.style.color = 'red';
+    });
+    
+    // Register as a user
+    registerBtn.addEventListener('click', () => {
+      const userId = document.getElementById('registerUserId').value.trim();
+      if (!userId) {
+        alert('Please enter a user ID');
+        return;
+      }
+      
+      currentUserId = userId;
+      socket.emit('register', userId);
+      connectionStatus.textContent = `Connected as User: ${userId}`;
+    });
+    
+    // Handle incoming notifications
+    socket.on('notification', (notification) => {
+      const timestamp = new Date().toLocaleTimeString();
+      const logEntry = `[${timestamp}] Received notification: ${JSON.stringify(notification, null, 2)}\n\n`;
+      responseContainer.textContent = logEntry + responseContainer.textContent;
+    });
+    
+    // Show/hide fields based on event type
+    eventType.addEventListener('change', () => {
+      const selectedType = eventType.value;
+      
+      // Hide all field sets
+      registerFields.style.display = 'none';
+      messageFields.style.display = 'none';
+      taskFields.style.display = 'none';
+      maintenanceFields.style.display = 'none';
+      
+      // Show the selected field set
+      switch (selectedType) {
+        case 'register':
+          registerFields.style.display = 'block';
+          break;
+        case 'message':
+          messageFields.style.display = 'block';
+          break;
+        case 'task':
+          taskFields.style.display = 'block';
+          break;
+        case 'maintenance':
+          maintenanceFields.style.display = 'block';
+          // Set default datetime to tomorrow
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          document.getElementById('scheduledTime').value = tomorrow.toISOString().slice(0, 16);
+          break;
+      }
+    });
+    
+    // Trigger selected event
+    triggerBtn.addEventListener('click', async () => {
+      const selectedType = eventType.value;
+      let payload = {};
+      
+      // Build payload based on event type
+      switch (selectedType) {
+        case 'register':
+          payload = {
+            userId: document.getElementById('userId').value.trim(),
+            username: document.getElementById('username').value.trim()
+          };
+          break;
+        case 'message':
+          payload = {
+            userId: document.getElementById('messageUserId').value.trim(),
+            senderName: document.getElementById('senderName').value.trim(),
+            messageId: document.getElementById('messageId').value.trim()
+          };
+          break;
+        case 'task':
+          payload = {
+            userId: document.getElementById('taskUserId').value.trim(),
+            taskName: document.getElementById('taskName').value.trim(),
+            taskId: document.getElementById('taskId').value.trim()
+          };
+          break;
+        case 'maintenance':
+          payload = {
+            message: document.getElementById('maintenanceMessage').value.trim(),
+            scheduledTime: document.getElementById('scheduledTime').value
+          };
+          break;
+      }
+      
+      try {
+        const response = await fetch(`/api/demo/events/${selectedType}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = `[${timestamp}] API Response: ${JSON.stringify(result, null, 2)}\n\n`;
+        responseContainer.textContent = logEntry + responseContainer.textContent;
+      } catch (error) {
+        console.error('Error:', error);
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = `[${timestamp}] Error: ${error.message}\n\n`;
+        responseContainer.textContent = logEntry + responseContainer.textContent;
+      }
+    });
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set default values for user ID fields from URL params if available
+      const urlParams = new URLSearchParams(window.location.search);
+      const defaultUserId = urlParams.get('userId');
+      
+      if (defaultUserId) {
+        document.getElementById('userId').value = defaultUserId;
+        document.getElementById('messageUserId').value = defaultUserId;
+        document.getElementById('taskUserId').value = defaultUserId;
+        document.getElementById('registerUserId').value = defaultUserId;
+      }
+    });
+  </script>
+</body>
+</html>
